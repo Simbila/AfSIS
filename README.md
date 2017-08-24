@@ -15,11 +15,11 @@ setwd("./OCP_npp")
 
 # Download
 # MobileSurvey data
-download("https://www.dropbox.com/s/m1ilf42a5xybhgo/TZ_geos_082317.csv?dl=0", mode="wb")
-crps <- read.table("TZ_geos_082317.csv?dl=0", header=T, sep=",")
+download("https://www.dropbox.com/s/m1ilf42a5xybhgo/TZ_geos_082317.csv?raw=1", mode="wb")
+crps <- read.table("TZ_geos_082317.csv?raw=1", header=T, sep=",")
 
 #Productivity grids
-download("https://www.dropbox.com/s/m1ilf42a5xybhgo/TZ_geos_082317.csv?dl=0", mode="wb")
+download("https://www.dropbox.com/s/m1ilf42a5xybhgo/TZ_geos_082317.csv?raw=1", mode="wb")
 glist <- list.files(pattern="tif", full.names=T)
 grids <- stack(glist)
 
