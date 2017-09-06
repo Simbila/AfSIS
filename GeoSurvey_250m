@@ -1,5 +1,6 @@
 # Tanzania GeoSurvey 250m resolution data setup
-# W. Simbila, September 2017
+# Copyright (C) September 2017, Markus G.Walsh
+# Updated by W. Simbila, September 2017
 
 # Required packages
 # install.packages(c("downloader", "rgdal", "raster", "caret"), dependencies=TRUE)
