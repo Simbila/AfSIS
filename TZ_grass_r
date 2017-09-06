@@ -1,5 +1,6 @@
-Tanzania GeoSurvey 250m Resolution Data Setup
-# W. Simbila, September 2017
+# Tanzania GeoSurvey 250m Resolution Data Setup
+# Copyright (C) September 2017; Markus G. Walsh
+# Updated by W. Simbila, September 2017
 
 # Required packages
 # install.packages(c("downloader", "rgdal", "raster", "caret"), dependencies=TRUE)
@@ -21,7 +22,7 @@ unzip("TZ_geos_082317.csv.zip", overwrite = T)
 geos <- read.table("TZ_geos_082317.csv", header=T, sep = ",")
 
 # download Tanzania Gtifs and stack in raster (note this is a big 500 + mb download)
-download("https://www.dropbox.com/s/imun904oi8lh77j/TZ_grass_r.zip?raw=1", "TZ_grass.zip", mode="wb")
+download("https://www.dropbox.com/s/imun904oi8lh77j/TZ_grass_r.zip?raw=1", "TZ_grass.zip", mode="web")
 unzip("TZ_grass.zip", overwrite = T)
 glist <- list.files(pattern = "tif", full.names = T)
 TZ_grass_r <- stack(glist)
