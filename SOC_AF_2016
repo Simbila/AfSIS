@@ -20,19 +20,19 @@ unzip("SOC_af.csv.zip", overwrite = T)
 geos <- read.table("SOC_af.csv", header=T, sep = ",")
 
 # download Africa Gtifs and stack in raster 
-download("https://www.dropbox.com/s/7tz69ospl86ytdj/aff_16.zip?raw=1", "aff_16.zip", mode="web")
-unzip("aff_16.zip", overwrite = T)
+download("https://www.dropbox.com/s/bi4wl3z2yf9cttw/AF_test_grids.zip?raw=1", "AF_test_grids.zip", mode="web")
+unzip("AF_test_grids.zip", overwrite = T)
 glist <- list.files(pattern = "tif", full.names = T)
-glist <- stack(glist)
+glist <- stack(AF_test_grids)
 
 # Data setup ---------------------------------------------------------------
-# Project GeoSurvey coords to grid CRS
+# Project SOC coords to grid CRS
 geos.proj <- as.data.frame(project(cbind(geos$lon, geos$lat), "+proj=laea +ellps=WGS84 +lon_0=20 +lat_0=5 +units=m +no_defs"))
 colnames(geos.proj) <- c("x", "y")
-aff_16 <- cbind(geos, geos.proj)
-coordinates(aff_16) <- ~x+y
-projection(aff_16) <- projection(aff_16)
+geos <- cbind(geos, geos.proj)
+coordinates(geos) <- ~x+y
+projection(geos) <- projection(glist)
 
 # extract gridded variables at locations
-geosaff_16 <- extract(aff_16, geos)
+gtif <- extract(AF_test_grids, geos)
 
