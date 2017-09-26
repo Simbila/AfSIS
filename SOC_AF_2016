@@ -1,76 +1,38 @@
- Tanzania GeoSurvey 250m Resolution Data Setup
- # M. Walsh, September 2017
- # Updated by: W. Simbila September 2017
+# Soil Organic Carbon Data Set Up
+# M. Walsh, September 2017
+# Updated by: W. Simbila September 2017
 
- # Required packages
- install.packages(c("downloader","rgdal","raster","caret"), dependencies=TRUE)
- suppressPackageStartupMessages({
+# Required packages
+install.packages(c("downloader","rgdal","raster","caret"), dependencies=TRUE)
+suppressPackageStartupMessages({
   require(downloader)
   require(rgdal)
   require(raster)
   require(caret)
- })
+})
 
 # Data downloads -----------------------------------------------------------
- # set working directory
- dir.create("TZ_GS250", showWarnings=F)
- setwd("./TZ_GS250")
+# set working directory
 
- # Download GeoSurvey data
- download("https://www.dropbox.com/s/wfb79z6pns9ablz/SOC_af.csv.zip?raw=1", "SOC_af.csv.zip", mode="web")
- unzip("SOC_af.csv.zip", overwrite = T)
- geos <- read.table("SOC_af.csv", header=T, sep = ",")
- 
- # download Tanzania Gtifs and stack in raster (note this is a big 500 + mb download)
- download("https://www.dropbox.com/s/51yg9jvybwo1f5k/af_2016.zip?raw=1", "af_2016.zip", mode="web")
- unzip("af_2016.zip", overwrite = T)
- glist <- list.files(pattern = "tif", full.names = T)
- af_2016 <- stack(glist)
- 
- # Data setup ---------------------------------------------------------------
- # project GeoSurvey coords to grid CRS
- geos.proj <- as.data.frame(project(cbind(geos$lon, geos$lat),"+proj=laea +ellps=WGS84 +lon_0=20 +lat_0=5 +units=m +no_def"))
- colnames(geos.proj) <- c("x", "y")
- geos <- cbind(geos, geos.proj)
- coordinates(geos) <- ~x+y
- projection(geos) <- projection(af_2016)
- 
- # extract gridded variables at GeoSuvey locations
- geosaf_2016 <- extract(af_2016, geos)
- 
- # Assemble dataframes
- # presence/absence of Buildings (BP, present = Y, absent = N)
- BP <- geos$BP
- bpdat <- as.data.frame(cbind(BP, geosaf_2016))
- bpdat <- na.omit(bpdat)
- 
- # presence/absence of Cropland (CP, present = Y, absent = N)
- CP <- geos$CP
- cpdat <- as.data.frame(cbind(CP, geosaf_2016))
- cpdat <- na.omit(cpdat)
- 
- # presence/absence of Woody Vegetation Cover >60% (WP, present = Y, absent = N)
- WP <- geos$WP
- wpdat <- as.data.frame(cbind(WP, geosaf_2016))
- wpdat <- na.omit(wpdat)
- 
- # Split data into train and test sets ----------------------------------------
- # set train/test set randomization seed
- seed <- 1285321
- set.seed(seed)
- 
- # Buildings train/test split
- bpIndex <- createDataPartition(bpdat$BP, p = 2/3, list = FALSE, times = 1)
- bpTrain <- bpdat[ bpIndex,]
- bpTest <- bpdat[-bpIndex,]
- 
- # Cropland train/test split
- cpIndex <- createDataPartition(cpdat$CP, p = 2/3, list = FALSE, times = 1)
- cpTrain <- cpdat[ cpIndex,]
- cpTest <- cpdat[-cpIndex,]
- 
- # Woody cover train/test split
- wpIndex <- createDataPartition(wpdat$WP, p = 2/3, list = FALSE, time = 1)
- wpTrain <- wpdat[ wpIndex,]
- wpTest <- wpdat[-wpIndex,]
- 
+# Download Soil Organic Carbon data
+download("https://www.dropbox.com/s/wfb79z6pns9ablz/SOC_af.csv.zip?raw=1", "SOC_af.csv.zip", mode="web")
+unzip("SOC_af.csv.zip", overwrite = T)
+geos <- read.table("SOC_af.csv", header=T, sep = ",")
+
+# download Africa Gtifs and stack in raster 
+download("https://www.dropbox.com/s/7tz69ospl86ytdj/aff_16.zip?raw=1", "aff_16.zip", mode="web")
+unzip("aff_16.zip", overwrite = T)
+glist <- list.files(pattern = "tif", full.names = T)
+glist <- stack(glist)
+
+# Data setup ---------------------------------------------------------------
+# Project GeoSurvey coords to grid CRS
+geos.proj <- as.data.frame(project(cbind(geos$lon, geos$lat), "+proj=laea +ellps=WGS84 +lon_0=20 +lat_0=5 +units=m +no_defs"))
+colnames(geos.proj) <- c("x", "y")
+aff_16 <- cbind(geos, geos.proj)
+coordinates(aff_16) <- ~x+y
+projection(aff_16) <- projection(aff_16)
+
+# extract gridded variables at locations
+geosaff_16 <- extract(aff_16, geos)
+
