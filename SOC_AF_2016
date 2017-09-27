@@ -1,9 +1,6 @@
-# Soil Organic Carbon Data Set Up
-# M. Walsh, September 2017
-# Updated by: W. Simbila September 2017
-
 # Africa-wide SOC data setup 
 # M. Walsh, September 2017
+# Updated by: W. Simbila September 2017
 
 # Required packages
 # install.packages(c("downloader","rgdal","raster","caret")), dependencies=TRUE)
