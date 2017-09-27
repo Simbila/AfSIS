@@ -2,8 +2,11 @@
 # M. Walsh, September 2017
 # Updated by: W. Simbila September 2017
 
+# Africa-wide SOC data setup 
+# M. Walsh, September 2017
+
 # Required packages
-install.packages(c("downloader","rgdal","raster","caret"), dependencies=TRUE)
+# install.packages(c("downloader","rgdal","raster","caret")), dependencies=TRUE)
 suppressPackageStartupMessages({
   require(downloader)
   require(rgdal)
@@ -13,26 +16,35 @@ suppressPackageStartupMessages({
 
 # Data downloads -----------------------------------------------------------
 # set working directory
+dir.create("AF_SOC", showWarnings=F)
+setwd("./AF_SOC")
 
-# Download Soil Organic Carbon data
-download("https://www.dropbox.com/s/wfb79z6pns9ablz/SOC_af.csv.zip?raw=1", "SOC_af.csv.zip", mode="web")
-unzip("SOC_af.csv.zip", overwrite = T)
-geos <- read.table("SOC_af.csv", header=T, sep = ",")
+# download SOC data
+download("https://www.dropbox.com/s/cn85c3jrlx2wgbp/SOCSAT.zip?raw=1", "SOCSAT.zip", mode="wb")
+unzip("SOCSAT.zip", overwrite=T)
+prof <- read.table("Profiles.csv", header=T, sep=",") ## profile locations
+prof <- prof[complete.cases(prof[ ,3:4]),] ## delete non-georeferenced profiles
+samp <- read.table("Samples.csv", header=T, sep=",") ## samples in profiles
 
-# download Africa Gtifs and stack in raster 
-download("https://www.dropbox.com/s/bi4wl3z2yf9cttw/AF_test_grids.zip?raw=1", "AF_test_grids.zip", mode="web")
-unzip("AF_test_grids.zip", overwrite = T)
-glist <- list.files(pattern = "tif", full.names = T)
-glist <- stack(AF_test_grids)
+# download Africa Gtifs and stack in raster (note this is a big 400Mb+ download)
+download("https://www.dropbox.com/s/8kw4jitwp1n1bmc/AF_test_grids.zip?raw=1", "AF_test_grids.zip", mode="wb")
+unzip("AF_test_grids.zip", overwrite=T)
+glist <- list.files(pattern="tif", full.names=T)
+grids <- stack(glist)
+plot(grids, axes = FALSE)
 
 # Data setup ---------------------------------------------------------------
-# Project SOC coords to grid CRS
-geos.proj <- as.data.frame(project(cbind(geos$lon, geos$lat), "+proj=laea +ellps=WGS84 +lon_0=20 +lat_0=5 +units=m +no_defs"))
-colnames(geos.proj) <- c("x", "y")
-geos <- cbind(geos, geos.proj)
-coordinates(geos) <- ~x+y
-projection(geos) <- projection(glist)
+# project SOC coords to grid CRS
+prof.proj <- as.data.frame(project(cbind(prof$Lon, prof$Lat), "+proj=laea +ellps=WGS84 +lon_0=20 +lat_0=5 +units=m +no_defs"))
+colnames(prof.proj) <- c("x","y")
+prof <- cbind(prof, prof.proj)
+coordinates(prof) <- ~x+y
+projection(prof) <- projection(grids)
 
-# extract gridded variables at locations
-gtif <- extract(AF_test_grids, geos)
+# extract gridded variables at profile locations
+socgrid <- extract(grids, prof)
+prof <- as.data.frame(cbind(prof, socgrid))
+soc <- merge(prof, samp, by="PID") ## merge by profile ID (PID)
 
+# Write file --------------------------------------------------------------
+write.csv(soc, "socdat.csv", row.names = FALSE)
