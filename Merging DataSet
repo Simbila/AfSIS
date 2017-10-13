@@ -11,3 +11,10 @@
   
   # Write complete csv file for combined dataset------------------------
   write.csv(DF, "DF.csv", row.names = F)
+  
+  # Removing Dublicate data from dataset files-------------------------------
+  duplicated(DF)
+  myDF <- DF[!duplicated(DF),]
+  
+  write.csv(myDF, "myDF.csv", row.names = F)
+  
