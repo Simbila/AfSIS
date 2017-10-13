@@ -1,0 +1,13 @@
+# W.Simbila
+# Merged Predicted Soil dataset with Coordinates
+ # W. Simbila October 2017
+
+  # Load dataset files---------------------------------------------------
+  df1 <- read.table("comDf.csv", header = T, sep =",") # complete Predicted Soil
+  df2 <- read.table("soil_mapping.csv", header = T, sep = ",") # complete dataset
+  
+  # Merging Data Frame Files--------------------------
+  DF <- merge(df1, df2, by = c("PID"))
+  
+  # Write complete csv file for combined dataset------------------------
+  write.csv(DF, "DF.csv", row.names = F)
