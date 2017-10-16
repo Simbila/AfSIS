@@ -13,8 +13,8 @@
   write.csv(DF, "DF.csv", row.names = F)
   
   # Removing Dublicate data from dataset files-------------------------------
-  duplicated(DF)
-  myDF <- DF[!duplicated(DF$PID),]
+  duplicated(DF) # Check any duplicate in the file
+  myDF <- DF[!duplicated(DF$PID),] # remove all duplicate from PID column
   
   write.csv(myDF, "myDF.csv", row.names = F)
   
