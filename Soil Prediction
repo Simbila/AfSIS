@@ -105,7 +105,7 @@
   gs <- gstat(id = "ph", formula = ph ~ 1, data = as(ph_cal, "Spatial"),
               set = list(idp = 2))
   
-  # Interpolate onto the prediction grid
+  # Interpolate onto the prediction grid -----------------------------------------
   z_idw <- predict(gs, nodes)
   
   # Interpolate onto the validation sample
@@ -133,4 +133,41 @@
   
   # Plot the experimental and fitted variogram together
   plot(v,v_fit)
+  
+  # Build a gstat object
+  gs <- gstat(id = "ph", formula = ph ~1, data = as(ph_cal, "Spatial"),
+              model = v_fit)
+  
+  # Interpolate onto the prediction grid -------------------------------------------
+  z_krige <- predict(gs, nodes)
+  
+  # Interpolate onto the validation samples
+  ph_val$z_krige <- predict(gs, as(ph_val, "Spatial"))$ph.pred
+  
+  # Plot the result
+  ssplot(z_krige)
+  
+  # creating a brick
+  gridded(z_krige) <- TRUE
+  z_krige <- brick(z_krige)
+  z_krige
+  
+  # Plot the result
+  plot(z_krige)
+  
+  # Validation on statistics for the IDW interpolation --------------------------------------
+  goof(ph_val$ph, ph_val$z_idw)
+  
+  # Validation statistics for the Kriging interpolation
+  goof(ph_val$ph, ph_val$z_krige)
+  
+  # Scatter plot of the predicted versus observed values
+  ggplot(ph_val, aes(ph, y = predicted, color = method)) +
+    geom_albine(colour = "#CCCCCC", linetype = 2) +
+    geom_point(aes(y = z_idw, col = "IDW")) +
+    geom_point(aes(y = z_krige, col = "kriged")) +
+    geom_smooth(aes(y = z_idw, col = "IDW"), method = lm, se = FALSE) +
+    geom_smooth(aes(y = z_krige, col = ))
+    
+  
   
