@@ -1,5 +1,7 @@
-# Prediction
+  # Soil pH Prediction
   # W. Simbila October 2017
+  # Aknowledge ISRIC tutorial DSM Masterclass 2017, Hamilton, NZ. 
+  
   # Load/install required packages --------------------------------------------------
   install.packages("rgdal", "ggplot2", "raster", "gstat", "sf", dependencies = TRUE)
   suppressPackageStartupMessages({
