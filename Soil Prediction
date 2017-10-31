@@ -1,0 +1,134 @@
+# Prediction
+  # W. Simbila October 2017
+  # Load/install required packages --------------------------------------------------
+  install.packages("rgdal", "ggplot2", "raster", "gstat", "sf", dependencies = TRUE)
+  suppressPackageStartupMessages({
+    require(downloader)
+    require(rgdal)
+    require(ggplot2)
+    require(gstat)
+    require(raster)
+    require(sf)
+  })
+  
+  # Setting working directory ----------------------------------------------------
+  setwd("~/")
+  dir.create("TZ_250m", showWarnings = T)
+  setwd("TZ_250m")
+  
+  # Loading dataset ------------------------------------------------------------
+  download("https://www.dropbox.com/s/f2sk8hc1sb28e49/myDF.csv?raw=1", "myDF.csv", mode = "web")
+  df <- read.csv("myDF.csv", header = T, sep = ",")
+  
+  # Convert the data frame to a simple feature collection
+  soil_pH <- st_as_sf(df,
+                      coords = c('X','Y'),
+                      crs = 21037,
+                      remove = F)
+  
+  # head(soil_pH)  
+  # Make a rectangular grid of points with 25m centre spacing and that is 200m
+  # larger on all sides than the extent of the observations
+  nodes <- st_make_grid(st_buffer(soil_pH, 200),
+                        cellsize = 25,
+                        what = "centers")
+  
+  # Ploting data 
+  plot(nodes, axes = TRUE)
+  plot(soil_pH, add = TRUE, col = "red")
+  
+  # Casting data into SpatialPoints
+  nodes <- as(nodes, "Spatial")
+  
+  # Interpolation
+  # Load required package if you didn't done that before
+  library(raster)
+  d <- pointDistance(nodes,
+                     as(soil_pH, "Spatial"),
+                     lonlat = )
+  
+  # Dimension of distance matrix
+  # dim(d)
+  
+  # Number of nodes in prediction grid
+  nrow(coordinates(nodes))
+  
+  # Number of nodes in prediction grid
+  nrow(soil_pH)
+  
+  # Loop over the rows of d and find the observation of the closest to every prediction node
+  closest <- apply(d, 1, function(x) which(x == min(x)))
+  
+  # Rename the pH column
+  colnames(soil_pH)[3] <- "ph"
+  
+  # Extract the pH value of every closest observation
+  tz_nn <- soil_pH$ph[closest]
+  
+  # Make a copy of the prediction
+  preds <- nodes
+  
+  # Creates a new colummn on preds that contain the nearest-neighbour predictions
+  preds$ph <- tz_nn
+  
+  class(preds)
+  
+  # Before convert preds to raster, let R know that the points are aligned on a regular grid
+  gridded(preds) <- TRUE
+  class(preds)
+  
+  # Then convert preds to the raster function -------------------------------
+  preds <- raster(preds)
+  plot(preds, main = "Nearest-neighbour 20 -100 cm pH")
+  
+  # Validation Sample selection ---------------------------------------------
+  set.seed(12345)
+  
+  # Select 1000 rows from soil_pH at random ----------------------------------
+  val_rows <- sample(nrow(soil_pH), 1000)
+  
+  # Split dataset into two --------------------------------------------------
+  ph_cal <- soil_pH[-val_rows, ]  # calibration
+  ph_val <- soil_pH[val_rows, ]   # validation
+  
+  # confirm that the new datasets are the right size -----------------------
+  nrow(soil_pH)
+  nrow(ph_cal)
+  nrow(ph_val)
+  
+  # Interpolation -------------------------------------------------------
+  # Build a gstat object
+  # idp is the IDW power parameter
+  # Need to convert soil_pH to spatial object on the fly, as sf object don't work with gstat
+  gs <- gstat(id = "ph", formula = ph ~ 1, data = as(ph_cal, "Spatial"),
+              set = list(idp = 2))
+  
+  # Interpolate onto the prediction grid
+  z_idw <- predict(gs, nodes)
+  
+  # Interpolate onto the validation sample
+  ph_val$z_iwd <- predict(gs, as(ph_val, "Spatial"))$ph.pred
+  
+  # Plot the result
+  spplot(z_idw["ph.pred"])
+  
+  # Finally convert z to a raster
+  gridded(z_idw) <- TRUE
+  z_idw <- raster(z_idw)
+  plot(z_idw, main = "Inverse-distance-weighted 20 - 100 cm pH")
+  
+  # Compute variogram for Tanzania predicted pH data
+  gs <- gstat(id = "ph", formula = ph ~ 1, data = as(ph_cal, "Spatial"))
+  
+  # Compute the experimental variogram
+  v <- variogram(gs, width = 10)
+  # head(v)
+  plot(v)
+  
+  # Fit an exponetial model to the experimental variogram
+  v_fit <- fit.variogram(v, vgm("Exp"))
+  v_fit
+  
+  # Plot the experimental and fitted variogram together
+  plot(v,v_fit)
+  
