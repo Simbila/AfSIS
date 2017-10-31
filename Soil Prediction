@@ -47,7 +47,7 @@
   library(raster)
   d <- pointDistance(nodes,
                      as(soil_pH, "Spatial"),
-                     lonlat = )
+                     lonlat = F)
   
   # Dimension of distance matrix
   # dim(d)
